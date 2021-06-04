@@ -18,8 +18,11 @@ import scipy.signal
 #-------------------------------------------------------------------------------
 
 def plot_loss(set_loss, training_loss, parameters, set_name):
-    """Takes the loss values for the training and validation/test sets and plots
-    them alongside each other with appropriate title.
+    """Takes the loss values for the training and validation/test sets and 
+    plots them alongside each other with appropriate title.
+
+    ***Only for NN results!!***
+
     Parameters
     ----------
     set_loss : list
@@ -45,39 +48,75 @@ def plot_loss(set_loss, training_loss, parameters, set_name):
 
 #-------------------------------------------------------------------------------
 
-def set_up_df(valid_set, unscaled_data):
+def set_up_df(result_set, unscaled_data, data_set):
     """Construct results dataframe by initializing all relative fields in the
-    validation set. We must sort by index first to prevent artifact generation. 
+    validation or test set. We must sort by index first to prevent artifact 
+    generation. 
     Parameters
     ----------
-    validation_set : list
-        The target (and already loaded) validation set.
+    result_set : list
+        The target (and already loaded) validation or test set.
+
     unscaled_data : mlnrg.loader.NRGData
         The original dataframe without parameter scaling. Required for
         the calculation of the SPE.
+   
+    data_set : string
+        Either 'kondo' or 'anderson'
+        Tells the subroutine how to transform the relevant information into
+        a dataframe. 
+
     Returns
     -------
-    An object with the fields named and a numpy array of the validation set's unscaled energies (B, T, TK)
+    An object with the fields named and a numpy array of the validation set's 
+    unscaled energies (B, T, TK)
     """
 
-    num_trials = len(valid_set);
-    idx = [valid_set[ii].name for ii in range(num_trials)];
+    num_trials = len(result_set);
+    idx = [result_set[ii].name for ii in range(num_trials)];
 
-    unscaled_energies = np.array(unscaled_data.raw.loc[idx][['B', 'T', 'TK']]);
+    # Erica needs to fix this awful tangle of code--another day. 
+    # Right now it works, fix it later. 
+    if(data_set == 'anderson'):
+        unscaled_energies = np.array(
+                            unscaled_data.raw.loc[idx][['B', 'T', 'TK']]
+                            );
+        raw_TK = np.asarray(unscaled_data.raw.iloc[idx,:]["TK"])
+
+    if(data_set == 'kondo'):
+        idx_names_array = np.array(
+                          [result_set[ii].name for ii in range(num_trials)]
+                          );
+        unscaled_energies = np.asarray([np.array(unscaled_data.raw.loc[
+                            unscaled_data.raw['idx'] ==   
+                            idx_names_array[ii]][['B', 'T', 'TK']]) \
+                            for ii in range(num_trials)
+                            ]
+                            )
+        unscaled_energies = np.reshape(unscaled_energies, [num_trials, 3]);
+
+        raw_TK = np.asarray([np.array(unscaled_data.raw.loc[
+                            unscaled_data.raw['idx'] ==   
+                            idx_names_array[ii]][['TK']]) \
+                            for ii in range(num_trials)
+                            ]
+                            );
+        raw_TK = np.reshape(raw_TK, num_trials);
+
     SPE_array = np.log10(np.max(np.abs(unscaled_energies), axis=1));
 
     # TK was not placed on a log10 scale during the load, so it is done in 
     # this dataframe intitialization.
     results = pd.DataFrame(
         {
-        'idx': [valid_set[ii].name for ii in range(num_trials)],
-        'U':   [valid_set[ii].feature[0] for ii in range(num_trials)],
-        'Gamma':  [valid_set[ii].feature[1] for ii in range(num_trials)],
-        'epsd': [valid_set[ii].feature[2] for ii in range(num_trials)],
-        'B': [valid_set[ii].feature[3] for ii in range(num_trials)],
-        'T': [valid_set[ii].feature[4] for ii in range(num_trials)],
-        'err':  [valid_set[ii].mae for ii in range(num_trials)],
-        'TK': list(np.log10(unscaled_data.raw.iloc[idx,:]["TK"])),
+        'idx': [result_set[ii].name for ii in range(num_trials)],
+        'U':   [result_set[ii].feature[0] for ii in range(num_trials)],
+        'Gamma':  [result_set[ii].feature[1] for ii in range(num_trials)],
+        'epsd': [result_set[ii].feature[2] for ii in range(num_trials)],
+        'B': [result_set[ii].feature[3] for ii in range(num_trials)],
+        'T': [result_set[ii].feature[4] for ii in range(num_trials)],
+        'err':  [result_set[ii].mae for ii in range(num_trials)],
+        'TK': list(np.log10(raw_TK)),
         'SPE': list(SPE_array)
         }
     )
