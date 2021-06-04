@@ -52,6 +52,7 @@ def set_up_df(result_set, unscaled_data, data_set):
     """Construct results dataframe by initializing all relative fields in the
     validation or test set. We must sort by index first to prevent artifact 
     generation. 
+
     Parameters
     ----------
     result_set : list
@@ -125,13 +126,20 @@ def set_up_df(result_set, unscaled_data, data_set):
 
 #-------------------------------------------------------------------------------
 
-def plot_err_histogram(errors):
-    """Takes the validation errors. Computes error stats and plots them. 
-    Returns stats.
+def plot_err_histogram(errors, set_name):
+    """Takes the validation or test set errors. Computes error stats and plots 
+    them. Returns stats.
+
     Parameters
     ----------
     errors : list
-        The error (usualy from the validation set, but could be test set?) 
+        The errors from the validation or test set
+
+    set_name : string
+        Either 'validation' or 'test'
+        Just an identifier to make it clear which data set the statistics
+        apply to. 
+
     Returns 
     -------
     The values for stats: deciles, mean, median.
@@ -141,9 +149,9 @@ def plot_err_histogram(errors):
     median = np.percentile(np.log10(errors), 50);
     mean = np.mean(np.log10(errors)); 
 
-    log.info("Validation set log10(mean) error: %.04g" % mean);
-    log.info("Validation set log10(median) error: %.04g" % median);
-    log.info("Validation set deciles (on log10 scale):\n%s" % deciles);
+    log.info("%s set log10(mean) error: %.04g" % (set_name, mean));
+    log.info("%s set log10(median) error: %.04g" % (set_name, median));
+    log.info("%s set deciles (on log10 scale):\n%s" % (set_name, deciles));
 
     # Now plot them.
     plt.clf();
