@@ -547,7 +547,7 @@ def plot_single_prediction(result_set, unscaled_data, omegas, selection):
 
     Parameters
     ----------
-    result set : list
+    result_set : list
         The original validation or test set list loaded straight from the 
         pkl file. 
 
@@ -555,7 +555,7 @@ def plot_single_prediction(result_set, unscaled_data, omegas, selection):
         The original dataframe without parameter scaling. Required for
         plotting the 'true' spectrum as we would expect to see it.
 
-    omegas :  np.array
+    omegas : np.array
         The natural frequency values for the x-axis.
    
     selection : int
@@ -586,6 +586,60 @@ def plot_single_prediction(result_set, unscaled_data, omegas, selection):
     ax2.plot(omegas, ground_truth, color='k', linewidth=1.5);
     ax2.plot(omegas, prediction, color='r', linestyle='--', linewidth=1.5);
   
+    plt.show()
+
+#-------------------------------------------------------------------------------
+
+def plot_random_25(result_set, unscaled_data, omegas, selections):
+    """
+    Plot 25 trial predictions from either the validation or test set against
+    their ground truth values in a 5x5 multigraph grid. 
+
+    Parameters
+    ----------
+    result_set : list
+        The original validation or test set list loaded straight from the 
+        pkl file. 
+
+    unscaled_data : mlnrg.loader.NRGData
+        The original dataframe without parameter scaling. Required for
+        plotting the 'true' spectrum as we would expect to see it.
+
+    omegas : np.array
+        The natural frequency values for the x-axis.
+
+    selections : np.array
+        The user may specify the desired trial IDs in this array.
+    """
+
+    plt.clf()
+    fig, axs= plt.subplots(5,5, sharey=True, sharex=True, figsize=(16,10));
+    bbox = dict(facecolor='white', edgecolor='white', boxstyle='round', 
+               alpha=0.9
+               );
+
+    row_indexes = np.array([]);
+    for ii in range(len(selections)):
+        for jj in range(len(result_set)):
+            if (int(result_set[jj].name) == int(selections[ii])):
+                row_indexes = np.append(row_indexes, int(ii)); 
+    row_indexes = row_indexes.astype(int)
+    
+
+    for kk in range(25):
+        prediction = result_set[row_indexes[kk]].pred;
+        ground_truth = result_set[row_indexes[kk]].target;
+        name = result_set[row_indexes[kk]].name;
+        mae = result_set[row_indexes[kk]].mae;
+        axs[kk//5, kk%5].plot(omegas, ground_truth, color='k', linewidth=2);
+        axs[kk//5, kk%5].plot(omegas, prediction, color='red', linewidth=2,
+                             linestyle='--'
+                             );
+        axs[kk//5, kk%5].text(0.05,0.72, '%i\nMAE=%0.03f'
+            % (name, mae),
+            transform=axs[kk//5,kk%5].transAxes,
+            bbox=bbox
+        );
     plt.show()
 
 #-------------------------------------------------------------------------------
