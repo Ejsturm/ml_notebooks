@@ -177,11 +177,14 @@ def plot_err_histogram(errors, set_name):
 #-------------------------------------------------------------------------------
 
 def plot_param_best_and_worst_dist(results_df, N=100):
-    """Take the validation dataframe and an integer number of trials. Plots all paramters values for the X best and worst trials on a histogram for analysis.
+    """Take the validation or test set dataframe and an integer number of 
+    trials. Plots all paramters values for the X best and worst trials in a 
+    histogram for analysis.
+
     Parameters
     ----------
     results_df : dataframe
-        Validation set dataframe with all relevant parameters
+        Validation or test set dataframe with all relevant parameters
   
     N : int
         The desired number of trials to display for best and worst histograms.
@@ -227,7 +230,7 @@ def plot_param_best_and_worst_dist(results_df, N=100):
 
 #-------------------------------------------------------------------------------
 
-def plot_best_and_worst_SPE_control(results_df, unscaled_energies, set_Name):
+def plot_best_and_worst_SPE_control(results_df, unscaled_energies, set_name):
     
     N = int(0.1*len(results_df.index));
     L = len(results_df.index);
@@ -277,7 +280,7 @@ def plot_best_and_worst_SPE_control(results_df, unscaled_energies, set_Name):
     ax1.hist([BisMax_best, TisMax_best, TKisMax_best], 
             bins=30, stacked=True, color=colors, edgecolor='k'
             );
-    ax1.set_title("%d best %s trials" % (N, set_Name));
+    ax1.set_title("%d best %s trials" % (N, set_name));
     ax1.set_ylabel("Number of Occurances", fontsize=12);
     ax1.legend(reversed(ax1.legend(labels, loc="upper left").legendHandles), 
               reversed(labels)
@@ -286,14 +289,14 @@ def plot_best_and_worst_SPE_control(results_df, unscaled_energies, set_Name):
     ax2.hist([BisMax_worst, TisMax_worst, TKisMax_worst], 
             bins=30, stacked=True, color=colors, edgecolor='k'
             );
-    ax2.set_title("%d worst %s trials" % (N, set_Name));
+    ax2.set_title("%d worst %s trials" % (N, set_name));
     
     fig.text(0.5,0, r"log$_{10}(SPE)$ Value", ha='center', fontsize=12);
     plt.show()
 
 #-------------------------------------------------------------------------------
 
-def plot_percentile(valid_set, unscaled_data, percentile):
+def plot_percentile(result_set, unscaled_data, percentile):
     """
     The user specifies a desired percentile between 0 and 100 inclusive. The
     first trial will be closest to that percentile and the remaining 9 trials
@@ -304,13 +307,17 @@ def plot_percentile(valid_set, unscaled_data, percentile):
     which are not the best trials! The best are >99th percentile! ***
     Parameters
     ----------
-    valid_set : list
-        The original validation set list loaded straight from the pkl file. 
+    result_set : list
+        The original validation or test set list loaded straight from the 
+        pkl file. 
+
     unscaled_data : mlnrg.loader.NRGData
         The original dataframe without parameter scaling. Required for
         printing the displayed trials' physical parameters & ID.
+
     percentile : float \in [0, 100] (ints work too)
         The desired percentile to be shown. 
+
     """
 
     if ((percentile < 0) or (percentile > 100)):
@@ -322,8 +329,8 @@ def plot_percentile(valid_set, unscaled_data, percentile):
     # Special case, worst 10 in BACKWARDS order, so last image is worst.
         title = "10 worst trials"
         addend = -10;
-        prediction = [valid_set[ii].pred for ii in range(-10,0)];
-        ground_truth = [valid_set[ii].target for ii in range(-10,0)];
+        prediction = [result_set[ii].pred for ii in range(-10,0)];
+        ground_truth = [result_set[ii].target for ii in range(-10,0)];
         mae = [np.abs(np.array(prediction[ii]) - \
               np.array(ground_truth[ii])).mean() \
               for ii in range(10)
@@ -333,8 +340,8 @@ def plot_percentile(valid_set, unscaled_data, percentile):
     # Special case, best 10, starting with best as first image. 
         title = "10 best trials"
         addend = 0; 
-        prediction = [valid_set[ii].pred for ii in range(10)];
-        ground_truth = [valid_set[ii].target for ii in range(10)];
+        prediction = [result_set[ii].pred for ii in range(10)];
+        ground_truth = [result_set[ii].target for ii in range(10)];
         mae = [np.abs(np.array(prediction[ii]) - \
               np.array(ground_truth[ii])).mean() \
               for ii in range(10)
@@ -345,37 +352,37 @@ def plot_percentile(valid_set, unscaled_data, percentile):
     # Because the results are stored best --> worst, to get the Nth 
     # percentile, one must take 100-N for the addend variable. 
         title = "10 trials from %.2g percentile" % percentile;
-        addend = int(len(valid_set) * ((100-percentile)/100)); 
-        prediction = [valid_set[ii + addend].pred for ii in range(-10,0)];
-        ground_truth = [valid_set[ii + addend].target for ii in range(-10,0)];
+        addend = int(len(result_set) * ((100-percentile)/100)); 
+        prediction = [result_set[ii + addend].pred for ii in range(-10,0)];
+        ground_truth = [result_set[ii + addend].target for ii in range(-10,0)];
         mae = [np.abs(np.array(prediction[ii]) - \
               np.array(ground_truth[ii])).mean() \
               for ii in range(10)
               ];
   
-    index = [valid_set[ii + addend].name for ii in range(10)];
+    index = [result_set[ii + addend].name for ii in range(10)];
     U_val = [unscaled_data.raw[unscaled_data.raw['idx'] == \
-            valid_set[ii + addend].name]['U'] \
+            result_set[ii + addend].name]['U'] \
             for ii in range(10)
             ]; 
     G_val = [unscaled_data.raw[unscaled_data.raw['idx'] == \
-            valid_set[ii + addend].name]['Gamma'] \
+            result_set[ii + addend].name]['Gamma'] \
             for ii in range(10)
             ]; 
     e_val = [unscaled_data.raw[unscaled_data.raw['idx'] == \
-            valid_set[ii + addend].name]['eps'] \
+            result_set[ii + addend].name]['eps'] \
             for ii in range(10)
             ]; 
     B_val = [unscaled_data.raw[unscaled_data.raw['idx'] == \
-            valid_set[ii + addend].name]['B'] \
+            result_set[ii + addend].name]['B'] \
             for ii in range(10)
             ]; 
     T_val = [unscaled_data.raw[unscaled_data.raw['idx'] == \
-            valid_set[ii + addend].name]['T'] \
+            result_set[ii + addend].name]['T'] \
             for ii in range(10)
             ]; 
     TK_val = [unscaled_data.raw[unscaled_data.raw['idx'] == \
-            valid_set[ii + addend].name]['TK'] \
+            result_set[ii + addend].name]['TK'] \
             for ii in range(10)
             ]; 
 
@@ -416,24 +423,28 @@ def plot_percentile(valid_set, unscaled_data, percentile):
     plt.show()
 
 #-------------------------------------------------------------------------------
-def plot_single_trial(unscaled_data, omegas,  selection):
+def plot_single_trial(unscaled_data, omegas, selection):
     """
     Plots a user-selected trial from the FULL data set. No machine learning
     info here, so it's okay to access any single trail even if normally it 
     would be a test trial.
     Plots selected trial 3 different ways, always finds any local maxima
     and notes them. Also computes and displays SPE control parameter.
+
     Parameters
     ----------
     unscaled_data : mlnrg.loader.NRGData
         The original dataframe without parameter scaling. Required for
         printing the displayed trials' physical parameters & ID and 
         computing SPE.
+
     omegas : np.array
         The natural frequency values for the x-axis.
+
     selection : int
         The user-specified trial of interest; 1-indexed for the user,
         but converted back to 0-index for internal python usage here.
+
     """
 
     if ((selection < 1) or (selection > len(unscaled_data.raw.loc[:]['idx']))):
