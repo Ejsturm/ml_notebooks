@@ -17,13 +17,13 @@ import scipy.signal
 
 #-------------------------------------------------------------------------------
 
-def plot_loss(validation_loss, training_loss, parameters):
-    """Takes the loss values for the training and validation sets and plots
+def plot_loss(set_loss, training_loss, parameters, set_name):
+    """Takes the loss values for the training and validation/test sets and plots
     them alongside each other with appropriate title.
     Parameters
     ----------
-    validation_loss : list
-        The validation set loss values.
+    set_loss : list
+        The validation or test set loss values.
     training_loss : list
         The training set loss values. 
     parameters : dict[str]
@@ -32,7 +32,7 @@ def plot_loss(validation_loss, training_loss, parameters):
 
     plt.clf();
    
-    plt.plot(validation_loss, color='k', label="Cross-validation Set");
+    plt.plot(set_loss, color='k', label=set_name);
     plt.plot(training_loss, color='r', linestyle=":", label="Training Set");
 
     plt.legend(framealpha=1);
