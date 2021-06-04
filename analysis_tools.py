@@ -301,10 +301,13 @@ def plot_percentile(result_set, unscaled_data, percentile):
     The user specifies a desired percentile between 0 and 100 inclusive. The
     first trial will be closest to that percentile and the remaining 9 trials
     displayed will be the next best ones after that. 
+
     Special percentile value 0 will call the absolute worst 10 trials.
     Special percentile value 100 will call the absolute best 10 trials. 
+
     *** Setting percentile=99 will provide the trial at the 99th percentile 
     which are not the best trials! The best are >99th percentile! ***
+
     Parameters
     ----------
     result_set : list
@@ -534,3 +537,57 @@ def plot_single_trial(unscaled_data, omegas, selection):
             );
 
 #-------------------------------------------------------------------------------
+
+def plot_single_prediction(result_set, unscaled_data, omegas, selection):
+    """
+    Plot a single spectrum of choice from either the validation or test set to
+    see how the prediction of the trained model does against something 'new.' 
+    Plots the linearly scaled 'machine' view as well as the true omega-value 
+    version side by side. 
+
+    Parameters
+    ----------
+    result set : list
+        The original validation or test set list loaded straight from the 
+        pkl file. 
+
+    unscaled_data : mlnrg.loader.NRGData
+        The original dataframe without parameter scaling. Required for
+        plotting the 'true' spectrum as we would expect to see it.
+
+    omegas :  np.array
+        The natural frequency values for the x-axis.
+   
+    selection : int
+        The ID value of the desired spectrum. 
+
+    """
+
+    selection = int(selection);
+    row_index = None;
+    for ii in range(len(result_set)):
+        if (result_set[ii].name == selection):
+            row_index = ii;
+
+    prediction = result_set[row_index].pred;
+    ground_truth = result_set[row_index].target;
+    mae = result_set[row_index].mae;
+
+    plt.clf();
+    fig, (ax1, ax2) = plt.subplots(1,2, figsize=(15,5), sharey=False, 
+                          sharex=False
+                          );
+    intX = np.arange(len(omegas));
+    ax1.plot(intX, ground_truth, color='k', linewidth=1.5);
+    ax1.plot(intX, prediction, color='r', linestyle='--', linewidth=1.5);
+    ax1.set_ylim([0, 1.1]);
+    ax1.set_yscale('symlog');
+    
+    ax2.plot(omegas, ground_truth, color='k', linewidth=1.5);
+    ax2.plot(omegas, prediction, color='r', linestyle='--', linewidth=1.5);
+  
+    plt.show()
+
+#-------------------------------------------------------------------------------
+
+
