@@ -1,4 +1,4 @@
-# bnl_erica_mlnrg_scripts
+# ml_notebooks 
 Scripts I developed independently or co-developed for the BNL ML projects. 
 
 Most of the code here will not work independently. Some might, provided that
